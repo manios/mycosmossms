@@ -38,29 +38,31 @@
  **
  ****************************************************************************/
 
- #include <QApplication>
- #include <QDir>
+#include <QApplication>
+#include <QDir>
 
- #include "httpwindow.h"
+#include "httpwindow.h"
+#include "MycosmosController.h"
 
- int main(int argc, char *argv[])
- {
-     QApplication app(argc, argv);
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
 
- #if defined(Q_OS_SYMBIAN)
-     // Change current directory from default private to c:\data
-     // in order that user can access the downloaded content
-     QDir::setCurrent("/home/linux");
- #elif defined(Q_WS_MAEMO_5)
-     QDir::setCurrent("/home/user");
- #endif
+#if defined(Q_OS_LINUX)
+    // Change current directory from default private to c:\data
+    // in order that user can access the downloaded content
+    QDir::setCurrent("/home/linux");
+#elif defined(Q_OS_WIN)
+    QDir::setCurrent("/home/user");
+#endif
 
-     HttpWindow httpWin;
+    HttpWindow httpWin;
 
- #if defined(Q_OS_SYMBIAN)
-     httpWin.showMaximized();
- #else
-     httpWin.show();
- #endif
-     return app.exec();
- }
+
+    MycosmosController *myc = new MycosmosController();
+myc->downloadPage();
+
+    httpWin.show();
+
+    return app.exec();
+}

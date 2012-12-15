@@ -1,8 +1,8 @@
 HEADERS += httpwindow.h \
-    mycosmoscontroller.h
+    MycosmosController.h
  SOURCES += httpwindow.cpp \
             main.cpp \
-    mycosmoscontroller.cpp
+    MycosmosController.cpp
  FORMS += authenticationdialog.ui
  QT += network
 
