@@ -2,7 +2,12 @@
 #include <QUrl>
 #include <QNetworkReply>
 #include <QNetworkAccessManager>
+#include <QDebug>
+#include <QNetworkCookie>
+#include <QNetworkCookieJar>
+#include <QList>
 #include <stdio.h>
+
 
 MycosmosController::MycosmosController(QObject *parent) :
     QObject(parent)
@@ -16,8 +21,6 @@ void MycosmosController::downloadPage(){
 
     QNetworkRequest nRequest(urlString);
     nManager.get(nRequest);
-
-
 
 }
 
@@ -35,7 +38,9 @@ void MycosmosController::downloadFinished(QNetworkReply *reply){
             QString replyText = QString::fromUtf8(reply->readAll());
 
             printf("Reply data: %s\n",qPrintable(replyText));
-            //              qDebug()<<replyText;
+
+//            QList<QNetworkCookie>  cookies = nManager.cookieJar().cookiesForUrl(url);
+//            printf("COOKIES for %s\n%s" ,qPrintable(url.host()) ,qPrintable(cookies));
         }
         else if (v >= 300 && v < 400) // Redirection
         {
