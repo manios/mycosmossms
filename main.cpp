@@ -40,12 +40,15 @@
 
 #include <QApplication>
 #include <QDir>
+#include <QTextCodec>
 
 #include "httpwindow.h"
 #include "MycosmosController.h"
 
 int main(int argc, char *argv[])
 {
+    QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
+
     QApplication app(argc, argv);
 
 #if defined(Q_OS_LINUX)
@@ -60,7 +63,7 @@ int main(int argc, char *argv[])
 
 
     MycosmosController *myc = new MycosmosController();
-myc->downloadPage();
+    myc->downloadPage();
 
     httpWin.show();
 
