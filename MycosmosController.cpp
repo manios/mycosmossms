@@ -13,6 +13,7 @@ MycosmosController::MycosmosController(QObject *parent) :
     QObject(parent)
 {
     nManager = new QNetworkAccessManager(this);
+    cookieData = QVariant();
 
     connect(nManager,SIGNAL(finished(QNetworkReply*)),SLOT(downloadFinished(QNetworkReply*)));
 }
@@ -20,15 +21,33 @@ MycosmosController::MycosmosController(QObject *parent) :
 void MycosmosController::downloadPage(){
     //    QString urlString = "http://www.google.gr";
     QString urlString = "http://mail.mycosmos.gr/mycosmos/login.aspx";
-    QUrl urliki(urlString);
 
-    QNetworkRequest nRequest(urlString);
+    //        QUrl urliki(urlString);
+    //        QString refererUrl = NULL;
 
-    nManager->get(nRequest);
+    //        QNetworkRequest nRequest(urlString);
+    //        addRequestHeaders(nRequest,refererUrl);
+
+    //        nManager->get(nRequest);
+    getPage(urlString,urlString);
 
 }
 
+void MycosmosController::getPage(QString &pageUrl,QString &refererUrl){
+    QNetworkRequest nRequest(pageUrl);
 
+    // add request headers
+    addRequestHeaders(nRequest,refererUrl);
+
+    // add cookies
+    if(!cookieData.isNull()){
+        nRequest.setHeader(QNetworkRequest::CookieHeader, cookieData);
+    }
+
+    // make a GET request
+    nManager->get(nRequest);
+
+}
 
 
 void MycosmosController::downloadFinished(QNetworkReply *reply){
@@ -52,6 +71,8 @@ void MycosmosController::downloadFinished(QNetworkReply *reply){
             }
             printf("COOKIES for %s\n%s\n" ,qPrintable(url.host()) ,qPrintable(QString::number(cookies.count())));
 
+            // save cookies inside a QVariant
+            cookieData.setValue(cookies);
         }
         else if (v >= 300 && v < 400) // Redirection
         {
@@ -75,10 +96,14 @@ void MycosmosController::downloadFinished(QNetworkReply *reply){
         printf("Download of %s failed: %s\n",url.toEncoded().constData(),qPrintable(reply->errorString()));
     }
 
-    printf("Url encoded Νένα 1:%s\n" ,qPrintable(QUrl::toPercentEncoding("Νένα 1",NULL,NULL)));
+    printf("Url encoded Νένα 1:%s\n" ,qPrintable(QUrl::toPercentEncoding("Νένα 1",0,0)));
+
+    // We receive ownership of the reply object
+    // and therefore need to handle deletion.
+    //    delete reply;
 }
 
-void MycosmosController::setRequestHeaders(QNetworkRequest &requesti,QString &referer){
+void MycosmosController::addRequestHeaders(QNetworkRequest &requesti,QString &referer){
     requesti.setRawHeader("User-Agent","Mozilla/5.0 (X11; Linux i686; rv:2.0b12) Gecko/20110222 Firefox/4.0b12");
     requesti.setRawHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
     requesti.setRawHeader("Accept-Language","el-gr,el;q=0.8,en-us;q=0.5,en;q=0.3");
