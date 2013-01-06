@@ -49,6 +49,21 @@ void MycosmosController::getPage(QString &pageUrl,QString &refererUrl){
 
 }
 
+void MycosmosController::postPage(QString &pageUrl,QString &refererUrl,QString &params){
+    QNetworkRequest nRequest(pageUrl);
+
+    // add request headers
+    addRequestHeaders(nRequest,refererUrl);
+
+    // add cookies
+    if(!cookieData.isNull()){
+        nRequest.setHeader(QNetworkRequest::CookieHeader, cookieData);
+    }
+
+    // UrlEncode request data and make a POST request
+    nManager->post(nRequest,QUrl::toPercentEncoding(params,0,0));
+
+}
 
 void MycosmosController::downloadFinished(QNetworkReply *reply){
     QUrl url = reply->url();
@@ -73,6 +88,8 @@ void MycosmosController::downloadFinished(QNetworkReply *reply){
 
             // save cookies inside a QVariant
             cookieData.setValue(cookies);
+
+            emit successfulResponse();
         }
         else if (v >= 300 && v < 400) // Redirection
         {
@@ -102,6 +119,7 @@ void MycosmosController::downloadFinished(QNetworkReply *reply){
     // and therefore need to handle deletion.
     //    delete reply;
 }
+
 
 void MycosmosController::addRequestHeaders(QNetworkRequest &requesti,QString &referer){
     requesti.setRawHeader("User-Agent","Mozilla/5.0 (X11; Linux i686; rv:2.0b12) Gecko/20110222 Firefox/4.0b12");

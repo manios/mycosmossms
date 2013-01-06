@@ -23,7 +23,7 @@ public:
     bool isConnected();
 
 signals:
-    
+    void successfulResponse();
 public slots:
     void downloadFinished(QNetworkReply *reply);
 private:
