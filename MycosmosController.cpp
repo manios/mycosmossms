@@ -19,6 +19,11 @@ MycosmosController::MycosmosController(QObject *parent) :
     connect(nManager,SIGNAL(finished(QNetworkReply*)),SLOT(downloadFinished(QNetworkReply*)));
 }
 
+MycosmosController::~MycosmosController(){
+    delete nReply;
+    delete nManager;
+}
+
 void MycosmosController::downloadPage(){
     //    QString urlString = "http://www.google.gr";
     QString urlString = "http://mail.mycosmos.gr/mycosmos/login.aspx";

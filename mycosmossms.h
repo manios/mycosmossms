@@ -10,6 +10,7 @@ class MyCosmosSms : public QObject
     Q_OBJECT
 public:
     MyCosmosSms(QObject *parent = 0);
+    ~MyCosmosSms();
     void getLostPassword(QString &telephoneNumber);
     int connectToHost(QString &username,QString &password);
     int sendMessage(QString &telephoneNumber,QString &messageText);
@@ -35,6 +36,11 @@ private slots:
     void serverRespondedSuccessfully();
     void getLostPasswordPhase1Complete();
     void getLostPasswordPhase2Complete();
+    void getCostPhase1Complete();
+    void getCostPhase2Complete();
+    void getCostPhase3Complete();
+    void getCostPhase4Complete();
+    void getCostPhase5Complete();
 };
 
 #endif // MYCOSMOSSMS_H

@@ -13,6 +13,7 @@ class MycosmosController : public QObject
     Q_OBJECT
 public:
     MycosmosController(QObject *parent = 0);
+    ~MycosmosController();
     void downloadPage();
     void getPage(const QString &pageUrl,const QString &refererUrl);
     void postPage(const QString &pageUrl,const QString &refererUrl,const QString &params);

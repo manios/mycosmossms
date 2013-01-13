@@ -17,6 +17,12 @@ MyCosmosSms::MyCosmosSms(QObject *parent) :
     connect(contra,SIGNAL(successfulResponse()),this,SLOT(serverRespondedSuccessfully()));
 }
 
+MyCosmosSms::~MyCosmosSms()
+{
+    delete contra;
+}
+
+
 void MyCosmosSms::getLostPassword(QString &telephoneNumber){
     connect(contra,SIGNAL(successfulResponse()),this,SLOT(getLostPasswordPhase1Complete()));
     myTelephone = telephoneNumber;
@@ -66,4 +72,23 @@ void MyCosmosSms::getLostPasswordPhase2Complete(){
 
     // Error
     printf("Lost password send successfully to: %s",qPrintable(myTelephone));
+}
+
+void MyCosmosSms::getCostPhase1Complete(){
+
+}
+
+void MyCosmosSms::getCostPhase2Complete(){
+
+}
+
+void MyCosmosSms::getCostPhase3Complete(){
+
+}
+
+void MyCosmosSms::getCostPhase4Complete(){
+
+}
+void MyCosmosSms::getCostPhase5Complete(){
+
 }
