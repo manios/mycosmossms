@@ -12,6 +12,7 @@ public:
     MyCosmosSms(QObject *parent = 0);
     ~MyCosmosSms();
     void getLostPassword(QString &telephoneNumber);
+    void getCost(QString &telephoneNumber,QString &password);
     int connectToHost(QString &username,QString &password);
     int sendMessage(QString &telephoneNumber,QString &messageText);
     int disconnectFromHost(QString &username,QString &password);
@@ -25,6 +26,7 @@ signals:
 private:
     MycosmosController *contra;
     static const QString URL_MYCOSMOS_LOGIN_PAGE;
+    static const QString URL_MYCOSMOS_LOGOUT_PAGE;
     static const QString URL_MYCOSMOS_GET_LOST_PASSWORD_PAGE;
     static const QString URL_MYCOSMOS_GET_COST_PAGE;
     static const QString URL_MYCOSMOS_SETTINGS_PAGE;

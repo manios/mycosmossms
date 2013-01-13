@@ -81,8 +81,6 @@ void MycosmosController::downloadFinished(QNetworkReply *reply){
 
         if (v >= 200 && v < 300){ // Success
 
-
-
         }
         else if (v >= 300 && v < 400) {// Redirection
 
