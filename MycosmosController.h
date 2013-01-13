@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
+#include <QNetworkReply>
 #include <QUrl>
 
 
@@ -13,22 +14,24 @@ class MycosmosController : public QObject
 public:
     MycosmosController(QObject *parent = 0);
     void downloadPage();
-    void getPage(QString &pageUrl,QString &refererUrl);
-    void postPage(QString &pageUrl,QString &refererUrl,QString &params);
+    void getPage(const QString &pageUrl,const QString &refererUrl);
+    void postPage(const QString &pageUrl,const QString &refererUrl,const QString &params);
+    QString getViewState();
     QString getViewState(QString &htmlResponse);
-    void addRequestHeaders(QNetworkRequest &requesti,QString &referer);
-    int connectToHost(QString &username,QString &password);
-    int sendMessage(QString &telephoneNumber,QString &messageText);
-    int disconnectFromHost(QString &username,QString &password);
-    bool isConnected();
-
+    void addRequestHeaders(QNetworkRequest &requesti,const QString &referer);
+    void setCookieData(QVariant &cookies);
+    QVariant getCookieData();
+    QString getHtmlResponse();
 signals:
     void successfulResponse();
+    void failedResponse(QNetworkReply::NetworkError errorCode);
 public slots:
     void downloadFinished(QNetworkReply *reply);
 private:
     QUrl url;
     QVariant cookieData;
+    QString viewStateString;
+    QString htmlReplyText;
     QNetworkReply *nReply;
     QNetworkAccessManager *nManager;
 };

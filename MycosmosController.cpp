@@ -2,9 +2,10 @@
 #include <QUrl>
 #include <QNetworkReply>
 #include <QNetworkAccessManager>
-#include <QDebug>
 #include <QNetworkCookie>
 #include <QNetworkCookieJar>
+#include <QDebug>
+#include <QRegExp>
 #include <QList>
 #include <stdio.h>
 
@@ -33,7 +34,7 @@ void MycosmosController::downloadPage(){
 
 }
 
-void MycosmosController::getPage(QString &pageUrl,QString &refererUrl){
+void MycosmosController::getPage(const QString &pageUrl,const QString &refererUrl){
     QNetworkRequest nRequest(pageUrl);
 
     // add request headers
@@ -49,7 +50,7 @@ void MycosmosController::getPage(QString &pageUrl,QString &refererUrl){
 
 }
 
-void MycosmosController::postPage(QString &pageUrl,QString &refererUrl,QString &params){
+void MycosmosController::postPage(const QString &pageUrl,const QString &refererUrl,const QString &params){
     QNetworkRequest nRequest(pageUrl);
 
     // add request headers
@@ -61,7 +62,7 @@ void MycosmosController::postPage(QString &pageUrl,QString &refererUrl,QString &
     }
 
     // UrlEncode request data and make a POST request
-    nManager->post(nRequest,QUrl::toPercentEncoding(params,0,0));
+    nManager->post(nRequest,params.toUtf8());
 
 }
 
@@ -73,26 +74,13 @@ void MycosmosController::downloadFinished(QNetworkReply *reply){
         int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
 
 
-        if (v >= 200 && v < 300) // Success
-        {
-            // Here we got the final reply
-            QString replyText = QString::fromUtf8(reply->readAll());
+        if (v >= 200 && v < 300){ // Success
 
-            //printf("Reply data: %s\n",qPrintable(replyText));
 
-            QList<QNetworkCookie>  cookies = nManager->cookieJar()->cookiesForUrl(url);
-            for(int i=0; i<cookies.count(); i++){
-                printf("COOKIE %d Name:%s Value:%s\n" ,i,qPrintable(QString::fromUtf8(cookies.at(i).name())),qPrintable(QString::fromUtf8(cookies.at(i).value())) );
-            }
-            printf("COOKIES for %s\n%s\n" ,qPrintable(url.host()) ,qPrintable(QString::number(cookies.count())));
 
-            // save cookies inside a QVariant
-            cookieData.setValue(cookies);
-
-            emit successfulResponse();
         }
-        else if (v >= 300 && v < 400) // Redirection
-        {
+        else if (v >= 300 && v < 400) {// Redirection
+
             // Get the redirection url
 
             QUrl newUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
@@ -106,6 +94,23 @@ void MycosmosController::downloadFinished(QNetworkReply *reply){
 
             return; // to keep the manager for the next request
         }
+
+        // Here we got the final reply
+        htmlReplyText = QString::fromUtf8(reply->readAll());
+
+        // get view state string
+        viewStateString =  getViewState(htmlReplyText);
+
+        QList<QNetworkCookie>  cookies = nManager->cookieJar()->cookiesForUrl(url);
+        for(int i=0; i<cookies.count(); i++){
+            printf("COOKIE %d Name:%s Value:%s\n" ,i,qPrintable(QString::fromUtf8(cookies.at(i).name())),qPrintable(QString::fromUtf8(cookies.at(i).value())) );
+        }
+        printf("COOKIES for %s\n%s\n" ,qPrintable(url.host()) ,qPrintable(QString::number(cookies.count())));
+
+        // save cookies inside a QVariant
+        cookieData.setValue(cookies);
+
+        emit successfulResponse();
     }
     else
     {
@@ -115,16 +120,31 @@ void MycosmosController::downloadFinished(QNetworkReply *reply){
 
     printf("Url encoded Νένα 1:%s\n" ,qPrintable(QUrl::toPercentEncoding("Νένα 1",0,0)));
 
+
     // We receive ownership of the reply object
     // and therefore need to handle deletion.
     //    delete reply;
 }
 
+QString MycosmosController::getViewState(QString &htmlResponse){
+    return htmlResponse.replace(QRegExp("^.*__VIEWSTATE\" value=\"([^\"]*)\".*$"),"\\1");
+}
 
-void MycosmosController::addRequestHeaders(QNetworkRequest &requesti,QString &referer){
-    requesti.setRawHeader("User-Agent","Mozilla/5.0 (X11; Linux i686; rv:2.0b12) Gecko/20110222 Firefox/4.0b12");
+QVariant MycosmosController::getCookieData(){
+    return cookieData;
+}
+
+QString MycosmosController::getHtmlResponse(){
+    return htmlReplyText;
+}
+
+QString MycosmosController::getViewState(){
+    return viewStateString;
+}
+void MycosmosController::addRequestHeaders(QNetworkRequest &requesti,const QString &referer){
+    requesti.setRawHeader("User-Agent","Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:18.0) Gecko/20100101");
     requesti.setRawHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-    requesti.setRawHeader("Accept-Language","el-gr,el;q=0.8,en-us;q=0.5,en;q=0.3");
+    requesti.setRawHeader("Accept-Language","en-US,en;q=0.5");
     requesti.setRawHeader("Accept-Encoding", "gzip, deflate");
     requesti.setRawHeader("Accept-Charset","ISO-8859-7,utf-8;q=0.7,*;q=0.7");
 

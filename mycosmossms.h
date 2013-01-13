@@ -16,16 +16,25 @@ public:
     int disconnectFromHost(QString &username,QString &password);
     bool isConnected();
 
-    
+signals:
+    void lostPasswordSent();
+    void smsSent();
+    void costRetrieved(int currentCost,int totalCost);
+
 private:
     MycosmosController *contra;
     static const QString URL_MYCOSMOS_LOGIN_PAGE;
+    static const QString URL_MYCOSMOS_GET_LOST_PASSWORD_PAGE;
     static const QString URL_MYCOSMOS_GET_COST_PAGE;
     static const QString URL_MYCOSMOS_SETTINGS_PAGE;
     static const QString URL_MYCOSMOS_SMS_PAGE;
 
+    QString myTelephone;
+    QString myPassword;
 private slots:
     void serverRespondedSuccessfully();
+    void getLostPasswordPhase1Complete();
+    void getLostPasswordPhase2Complete();
 };
 
 #endif // MYCOSMOSSMS_H

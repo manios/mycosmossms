@@ -44,6 +44,7 @@
 
 #include "httpwindow.h"
 #include "MycosmosController.h"
+#include "mycosmossms.h"
 
 int main(int argc, char *argv[])
 {
@@ -64,6 +65,10 @@ int main(int argc, char *argv[])
 
     MycosmosController *myc = new MycosmosController();
     myc->downloadPage();
+
+    MyCosmosSms sms;
+    QString myphone = "";
+    sms.getLostPassword(myphone);
 
     httpWin.show();
 
