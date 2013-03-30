@@ -10,6 +10,8 @@ const QString MyCosmosSms::URL_MYCOSMOS_GET_LOST_PASSWORD_PAGE = QString("http:/
 const QString MyCosmosSms::URL_MYCOSMOS_GET_COST_PAGE = QString("http://mail.mycosmos.gr/mycosmos/CostControl.aspx");
 const QString MyCosmosSms::URL_MYCOSMOS_SETTINGS_PAGE = QString("http://mail.mycosmos.gr/mycosmos/Settings.asp");
 const QString MyCosmosSms::URL_MYCOSMOS_SMS_PAGE = QString("http://mail.mycosmos.gr/mycosmos/SMS_Send.aspx");
+const int MyCosmosSms::INTENT_SEND_SMS = 0x01;
+const int MyCosmosSms::INTENT_GET_COST = 0x02;
 
 MyCosmosSms::MyCosmosSms(QObject *parent) :
     QObject(parent)
@@ -48,12 +50,26 @@ void MyCosmosSms:: getCost(QString &telephoneNumber,QString &password){
 }
 
 int MyCosmosSms::connectToHost(QString &username,QString &password){
-    username += "ewfef";
+
+    myTelephone = username;
+    myPassword = password;
+
+    // create request data
+    QString pData = "__EVENTTARGET=&__EVENTARGUMENT=&tbUsername="+QUrl::toPercentEncoding(myTelephone,0,0)
+            +"&tbPassword=" +QUrl::toPercentEncoding(myPassword,0,0)
+            + "&btLogin=Log%20On&rbSecurityPub=rbSecurityPub";
+
+    // post page to log in
+    contra->postPage(URL_MYCOSMOS_LOGIN_PAGE,URL_MYCOSMOS_LOGIN_PAGE,pData);
 
     return 0;
 }
 
 int MyCosmosSms::sendMessage(QString &telephoneNumber,QString &messageText){
+    connect(contra,SIGNAL(successfulResponse()),this,SLOT(getSendMessagePhase1Complete()));
+    actionIntent = INTENT_SEND_SMS;
+
+    connectToHost(myTelephone,myPassword);
 
     return 0;
 }
@@ -93,7 +109,7 @@ void MyCosmosSms::getLostPasswordPhase2Complete(){
 }
 
 void MyCosmosSms::getCostPhase1Complete(){
- printf("In phase %d",1);
+    printf("In phase %d",1);
     disconnect(contra,SIGNAL(successfulResponse()),this,SLOT(getCostPhase1Complete()));
     connect(contra,SIGNAL(successfulResponse()),this,SLOT(getCostPhase2Complete()));
 
@@ -104,7 +120,7 @@ void MyCosmosSms::getCostPhase1Complete(){
 }
 
 void MyCosmosSms::getCostPhase2Complete(){
-printf("In phase %d",2);
+    printf("In phase %d",2);
     disconnect(contra,SIGNAL(successfulResponse()),this,SLOT(getCostPhase2Complete()));
     connect(contra,SIGNAL(successfulResponse()),this,SLOT(getCostPhase3Complete()));
 
@@ -115,7 +131,7 @@ printf("In phase %d",2);
 }
 
 void MyCosmosSms::getCostPhase3Complete(){
-printf("In phase %d",3);
+    printf("In phase %d",3);
     disconnect(contra,SIGNAL(successfulResponse()),this,SLOT(getCostPhase3Complete()));
     connect(contra,SIGNAL(successfulResponse()),this,SLOT(getCostPhase4Complete()));
 
@@ -126,7 +142,7 @@ printf("In phase %d",3);
 }
 
 void MyCosmosSms::getCostPhase4Complete(){
-printf("In phase %d",4);
+    printf("In phase %d",4);
     disconnect(contra,SIGNAL(successfulResponse()),this,SLOT(getCostPhase4Complete()));
     connect(contra,SIGNAL(successfulResponse()),this,SLOT(getCostPhase5Complete()));
 
@@ -145,10 +161,60 @@ printf("In phase %d",4);
 
 }
 void MyCosmosSms::getCostPhase5Complete(){
- printf("In phase %d",5);
+    printf("In phase %d",5);
     // successfull logout
 
     disconnect(contra,SIGNAL(successfulResponse()),this,SLOT(getCostPhase4Complete()));
 
     printf("Disconnected successfully!");
 }
+
+void MyCosmosSms::getSendMessagePhase1Complete(){
+    printf("Send message phase 2");
+    disconnect(contra,SIGNAL(successfulResponse()),this,SLOT(getSendMessagePhase1Complete()));
+
+    if(contra->getHttpStatusCode() != 301){
+        emit logInResult(false);
+        return;
+    }
+
+    emit logInResult(true);
+
+
+    QString urlSendPage = URL_MYCOSMOS_SMS_PAGE;
+
+    QString urlSendPageReferer  ="http://mail.mycosmos.gr/mycosmos/MyCosmos.aspx";
+
+    connect(contra,SIGNAL(successfulResponse()),this,SLOT(getSendMessagePhase2Complete()));
+
+    contra->getPage(urlSendPage,urlSendPageReferer);
+
+}
+
+void MyCosmosSms::getSendMessagePhase2Complete(){
+    printf("Send message phase 2");
+    disconnect(contra,SIGNAL(successfulResponse()),this,SLOT(getSendMessagePhase2Complete()));
+    connect(contra,SIGNAL(successfulResponse()),this,SLOT(getSendMessagePhase3Complete()));
+
+    // create request data
+    QString pData = "__VIEWSTATE=" +QUrl::toPercentEncoding(contra->getViewState(),0,0) +
+            +"&txtMobileNo="+QUrl::toPercentEncoding(myTelephone,0,0)
+            +"&txtMessage="+QUrl::toPercentEncoding(mySmsMessage,0,0)
+            +"&btnSend=Send";
+
+    // post page with telephone
+    contra->postPage(URL_MYCOSMOS_SMS_PAGE,URL_MYCOSMOS_SMS_PAGE,pData);
+
+}
+
+void MyCosmosSms::getSendMessagePhase2Complete(){
+    printf("Send message phase 2");
+    disconnect(contra,SIGNAL(successfulResponse()),this,SLOT(getSendMessagePhase2Complete()));
+
+    // emit signal that sms is sent
+    emit smsSent();
+
+    // log out
+    contra->getPage(URL_MYCOSMOS_LOGOUT_PAGE,URL_MYCOSMOS_SMS_PAGE);
+}
+

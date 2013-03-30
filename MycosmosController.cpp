@@ -144,6 +144,11 @@ QString MycosmosController::getHtmlResponse(){
 QString MycosmosController::getViewState(){
     return viewStateString;
 }
+
+int MycosmosController::getHttpStatusCode(){
+    return this->httpStatusCode;
+}
+
 void MycosmosController::addRequestHeaders(QNetworkRequest &requesti,const QString &referer){
     requesti.setRawHeader("User-Agent","Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:18.0) Gecko/20100101");
     requesti.setRawHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");

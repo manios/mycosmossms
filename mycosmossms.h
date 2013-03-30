@@ -22,6 +22,7 @@ signals:
     void lostPasswordSent();
     void smsSent();
     void costRetrieved(int currentCost,int totalCost);
+    void logInResult(bool isLoggedIn);
 
 private:
     MycosmosController *contra;
@@ -31,9 +32,13 @@ private:
     static const QString URL_MYCOSMOS_GET_COST_PAGE;
     static const QString URL_MYCOSMOS_SETTINGS_PAGE;
     static const QString URL_MYCOSMOS_SMS_PAGE;
+    static const int INTENT_SEND_SMS;
+    static const int INTENT_GET_COST;
 
     QString myTelephone;
     QString myPassword;
+    QString mySmsMessage;
+    int actionIntent;
 private slots:
     void serverRespondedSuccessfully();
     void getLostPasswordPhase1Complete();
@@ -43,6 +48,8 @@ private slots:
     void getCostPhase3Complete();
     void getCostPhase4Complete();
     void getCostPhase5Complete();
+    void getSendMessagePhase1Complete();
+    void getSendMessagePhase2Complete();
 };
 
 #endif // MYCOSMOSSMS_H

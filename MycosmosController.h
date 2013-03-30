@@ -23,6 +23,7 @@ public:
     void setCookieData(QVariant &cookies);
     QVariant getCookieData();
     QString getHtmlResponse();
+    int getHttpStatusCode();
 signals:
     void successfulResponse();
     void failedResponse(QNetworkReply::NetworkError errorCode);
@@ -35,6 +36,7 @@ private:
     QString htmlReplyText;
     QNetworkReply *nReply;
     QNetworkAccessManager *nManager;
+    int httpStatusCode;
 };
 
 #endif // MYCOSMOSCONTROLLER_H
