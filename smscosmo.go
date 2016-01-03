@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"reflect"
 	"regexp"
 )
@@ -161,4 +163,42 @@ func getSessionId(myurl string) map[string]string {
 	m["request_token"] = requestToken
 
 	return m
+}
+
+func login(username string, password string, requestToken string, roundCubeSessionId string) {
+
+	reqParams := url.Values{}
+
+	reqParams.Set("_token", requestToken)
+	reqParams.Set("_task", "login")
+	reqParams.Set("_action", "login")
+	reqParams.Set("_timezone", "Europe/Helsinki")
+	reqParams.Set("_url", "")
+	reqParams.Set("_user", username)
+	reqParams.Set("_pass", password)
+
+	// TODO add cookies
+	// http://stackoverflow.com/questions/12756782/go-http-post-and-use-cookies
+
+	// connection params
+	// skip SSL verification
+	transp := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	// create http client
+	client := &http.Client{Transport: transp}
+
+	req, _ := http.NewRequest("POST", MyCosmosUrl, bytes.NewBufferString(reqParams.Encode()))
+
+	// execute POST request
+	//resp, err := client.Do(req)
+	_, err := client.Do(req)
+
+	// if there is an error, panic
+	// aaaaaa!
+	if err != nil {
+		panic(err)
+	}
+
 }
