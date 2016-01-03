@@ -13,6 +13,8 @@ type Stratos struct {
 	ff int8
 }
 
+const MyCosmosUrl = "https://www.mycosmos.gr"
+
 ///
 /// This is a main program!!! I am bobos and I like girls!
 func main() {
@@ -57,6 +59,8 @@ func main() {
 	//	fmt.Println("response Body:", string(body))
 
 	fmt.Println("response Status:", resp.Status)
+
+	fmt.Println(resp.Status == "200 OK")
 	fmt.Println("response Headers:", resp.Header)
 
 	cookies := resp.Cookies()
@@ -106,4 +110,55 @@ func main() {
 
 	// Golang Https
 	// http://stackoverflow.com/questions/12122159/golang-how-to-do-a-https-request-with-bad-certificate
+}
+
+func getSessionId(myurl string) map[string]string {
+
+	// connection params
+	// skip SSL verification
+	transp := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	// create http client
+	client := &http.Client{Transport: transp}
+
+	req, _ := http.NewRequest("GET", myurl, nil)
+
+	// execute GET request
+	resp, err := client.Do(req)
+
+	// if there is an error, panic
+	// aaaaaa!
+	if err != nil {
+		panic(err)
+	}
+
+	// read http response body
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	// defer connection close
+	defer resp.Body.Close()
+
+	cookies := resp.Cookies()
+	var sessionCookie *http.Cookie
+
+	for i, v := range cookies {
+		fmt.Printf("pos:%d Name:%s -> %s\n", i, v.Name, v.Value)
+
+		if v.Name == "roundcube_sessid" {
+			sessionCookie = v
+
+			break
+		}
+	}
+
+	tokenPattern := regexp.MustCompile("request_token\":\"([^\"]+)\"")
+	requestToken := tokenPattern.FindAllStringSubmatch(string(body), 1)[0][1]
+
+	m := make(map[string]string)
+	m["roundcube_sessid"] = sessionCookie.Value
+	m["request_token"] = requestToken
+
+	return m
 }
