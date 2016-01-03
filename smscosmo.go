@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
+	"unicode/utf8"
 )
 
 type Stratos struct {
@@ -201,4 +202,6 @@ func login(username string, password string, requestToken string, roundCubeSessi
 		panic(err)
 	}
 
+	// count number of characters (runes)
+	//	utf8.RuneCountInString("Χρήστος世界"))
 }
