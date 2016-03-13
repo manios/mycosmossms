@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 )
@@ -17,7 +19,9 @@ type Stratos struct {
 	ff int8
 }
 
-const MyCosmosUrl = "https://www.mycosmos.gr"
+const MyCosmosUrl = "https://www.mycosmos.gr/"
+
+var mycookies []*http.Cookie
 
 ///
 /// This is a main program!!! I am bobos and I like girls!
@@ -32,7 +36,7 @@ func main() {
 	requestToken = respMap["request_token"]
 	roundCubeSessionId = respMap["roundcube_sessid"]
 
-	fmt.Printf("getSessionId roundcube sessId:%s\nrequest_token:%s", roundCubeSessionId, requestToken)
+	fmt.Printf("getSessionId roundcube sessId:%s\nrequest_token:%s\n", roundCubeSessionId, requestToken)
 
 	login("", "", requestToken, roundCubeSessionId)
 
@@ -79,16 +83,17 @@ func getSessionId(myurl string) map[string]string {
 	// defer connection close
 	defer resp.Body.Close()
 
-	cookies := resp.Cookies()
+	//cookies := resp.Cookies()
+	mycookies = resp.Cookies()
 	var sessionCookie *http.Cookie
 
-	for i, v := range cookies {
+	//	for i, v := range cookies {
+	for i, v := range mycookies {
 		fmt.Printf("pos:%d Name:%s -> %s\n", i, v.Name, v.Value)
 
 		if v.Name == "roundcube_sessid" {
 			sessionCookie = v
-
-			break
+			//					break
 		}
 	}
 
@@ -117,15 +122,15 @@ func login(username string, password string, requestToken string, roundCubeSessi
 	reqParams.Set("_pass", password)
 
 	// TODO add cookies
-	myCookie := http.Cookie{
-		Name:     "roundcube_sessid",
-		Value:    roundCubeSessionId,
-		Path:     "/",
-		MaxAge:   0,
-		Secure:   true,
-		HttpOnly: true,
-		Raw:      "roundcube_sessid" + roundCubeSessionId,
-		Unparsed: []string{"roundcube_sessid" + roundCubeSessionId}}
+	//	myCookie := http.Cookie{
+	//		Name:     "roundcube_sessid",
+	//		Value:    roundCubeSessionId,
+	//		Path:     "/",
+	//		MaxAge:   0,
+	//		Secure:   true,
+	//		HttpOnly: true,
+	//		Raw:      "roundcube_sessid" + roundCubeSessionId,
+	//		Unparsed: []string{"roundcube_sessid" + roundCubeSessionId}}
 
 	// http://stackoverflow.com/questions/12756782/go-http-post-and-use-cookies
 	// https://groups.google.com/forum/#!topic/golang-nuts/x3JDvuWVO9A
@@ -138,15 +143,32 @@ func login(username string, password string, requestToken string, roundCubeSessi
 	}
 
 	// create http client
-	client := &http.Client{Transport: transp}
+	//	client := &http.Client{Transport: transp}
 
 	req, _ := http.NewRequest("POST", MyCosmosUrl, bytes.NewBufferString(reqParams.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:43.0) Gecko/20100101 Firefox/43.0)")
-	req.AddCookie(&myCookie)
+	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:44.0) Gecko/20100101 Firefox/44.0")
+	req.Header.Set("Content-Length", strconv.Itoa(len(reqParams.Encode())))
+	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
+	// comment it for a while
+	//req.AddCookie(&myCookie)
+
+	for i, v := range mycookies {
+		if v.Name == "roundcube_sessid" {
+
+			fmt.Printf("Add cookie pos:%d Name:%s -> %s\n", i, v.Name, v.Value)
+			req.AddCookie(v)
+		}
+	}
+
+	debug(httputil.DumpRequestOut(req, true))
+
+	// http://stackoverflow.com/questions/23297520/how-can-i-make-the-go-http-client-not-follow-redirects-automatically
+	// http://speakmy.name/2014/07/29/http-request-debugging-in-go/
 
 	// execute POST request
-	resp, err := client.Do(req)
+	//	resp, err := client.Do(req)
+	resp, err := transp.RoundTrip(req)
 	//_, err := client.Do(req)
 
 	// if there is an error, panic
@@ -155,6 +177,7 @@ func login(username string, password string, requestToken string, roundCubeSessi
 		panic(err)
 	}
 
+	fmt.Println("====== DEBUG LOGIN INFORMATION =======")
 	debugHttpResponse(resp)
 	//	// read http response body
 	//	body, _ := ioutil.ReadAll(resp.Body)
@@ -200,6 +223,9 @@ func debugHttpResponse(resp *http.Response) {
 	var roundCubeSessionId = resp.Header["Set-Cookie"]
 	fmt.Println("roundCubeSessionId: ", roundCubeSessionId)
 
+	var newLocation = resp.Header["Location"]
+	fmt.Println("newLocation: ", newLocation)
+
 	var sessionCookie **http.Cookie
 
 	for i, v := range cookies {
@@ -208,9 +234,13 @@ func debugHttpResponse(resp *http.Response) {
 		if v.Name == "roundcube_sessid" {
 			sessionCookie = &v
 
-			break
+			//			break
 		}
 	}
+
+	var beba string
+	beba = "Haos"
+	fmt.Println("beba: ", beba)
 
 	fmt.Printf("found cookie: %t\n", (*sessionCookie != nil))
 	//	fmt.Printf("Name:%s -> %s\n", *sessionCookie.Name, *sessionCookie.Value)
@@ -239,4 +269,12 @@ func debugHttpResponse(resp *http.Response) {
 
 	// Golang Https
 	// http://stackoverflow.com/questions/12122159/golang-how-to-do-a-https-request-with-bad-certificate
+}
+
+func debug(data []byte, err error) {
+	if err == nil {
+		fmt.Printf("%s\n\n", data)
+	} else {
+		fmt.Printf("%s\n\n", err)
+	}
 }
