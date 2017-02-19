@@ -19,6 +19,17 @@ type Stratos struct {
 	ff int8
 }
 
+type Credentials struct {
+	Username string
+	password string
+}
+
+type MyCosmosSession struct {
+	RequestToken string
+	SessionId    string
+	SessionAuth  string
+}
+
 const MyCosmosUrl = "https://www.mycosmos.gr/"
 
 var mycookies []*http.Cookie
@@ -84,6 +95,7 @@ func getSessionId(myurl string) map[string]string {
 	defer resp.Body.Close()
 
 	//cookies := resp.Cookies()
+
 	mycookies = resp.Cookies()
 	var sessionCookie *http.Cookie
 
@@ -178,12 +190,28 @@ func login(username string, password string, requestToken string, roundCubeSessi
 	}
 
 	fmt.Println("====== DEBUG LOGIN INFORMATION =======")
-	debugHttpResponse(resp)
-	//	// read http response body
-	//	body, _ := ioutil.ReadAll(resp.Body)
+	debugLoginHttpResponse(resp)
 
-	//	// defer connection close
-	//	defer resp.Body.Close()
+	// we do not need to read http response body
+	// as it contains no information
+
+	//cookies := resp.Cookies()
+	mycookies = resp.Cookies()
+	var sessionIdCookie *http.Cookie
+	var sessionAuthCookie *http.Cookie
+
+	for i, v := range mycookies {
+		fmt.Printf("pos:%d Name:%s -> %s\n", i, v.Name, v.Value)
+
+		if v.Name == "roundcube_sessid" {
+			sessionIdCookie = v
+		}
+
+		if v.Name == "roundcube_sessauth" {
+			sessionAuthCookie = v
+		}
+
+	}
 
 }
 
@@ -205,7 +233,7 @@ func isStringLeLimit(str string, limit int) bool {
 	return true
 }
 
-func debugHttpResponse(resp *http.Response) {
+func debugLoginHttpResponse(resp *http.Response) {
 
 	body, _ := ioutil.ReadAll(resp.Body)
 	//	fmt.Println("response Body:", string(body))
@@ -238,9 +266,9 @@ func debugHttpResponse(resp *http.Response) {
 		}
 	}
 
-	var beba string
-	beba = "Haos"
-	fmt.Println("beba: ", beba)
+	//	var beba string
+	//	beba = "Haos"
+	//	fmt.Println("beba: ", beba)
 
 	fmt.Printf("found cookie: %t\n", (*sessionCookie != nil))
 	//	fmt.Printf("Name:%s -> %s\n", *sessionCookie.Name, *sessionCookie.Value)
@@ -261,8 +289,9 @@ func debugHttpResponse(resp *http.Response) {
 	//	re := regexp.MustCompile(patterno)
 	ret := regexp.MustCompile("request_token\":\"([^\"]+)\"")
 
-	fmt.Printf("%q\n", ret.FindAllStringSubmatch(string(body), 1))
-	fmt.Printf("%s\n", ret.FindAllStringSubmatch(string(body), 1)[0][1])
+	fmt.Printf("Full body:\n%s\n", string(body))
+	fmt.Printf("request_token:%q\n", ret.FindAllStringSubmatch(string(body), 1))
+	//fmt.Printf("%s\n", ret.FindAllStringSubmatch(string(body), 1)[0][1])
 
 	// http://blog.denevell.org/golang-regex-replace-split.html
 	//	fmt.Println(testTheTest())
@@ -272,9 +301,14 @@ func debugHttpResponse(resp *http.Response) {
 }
 
 func debug(data []byte, err error) {
+
 	if err == nil {
 		fmt.Printf("%s\n\n", data)
 	} else {
 		fmt.Printf("%s\n\n", err)
 	}
+
 }
+
+// idle_timeout_warning":15,"idle_timeout_logout":5,"request_token":"765812d0cd2327d9044f2e7939356c74"});
+// rcmail.display_message("Operation completed, total sent messages: 1","notice",0);

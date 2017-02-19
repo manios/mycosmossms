@@ -10,4 +10,6 @@ Links that helped a lot:
 * [Qt HTTP example](http://qt-project.org/doc/qt-4.8/network-http.html)
 * [Set NULL QString](http://qt-project.org/forums/viewthread/8648)
 
+Trying to make it with Golang
+
 #Status: Under development#
